@@ -4,6 +4,24 @@
 let geojsonData = null;
 let selectedDistrictName = null;
 
+// Name mapping: GeoJSON name -> data.js name
+// Fixes spelling differences between the two sources
+const districtNameMap = {
+  "Chittagong": "Chattogram",
+  "Comilla": "Cumilla",
+  "Jhalokati": "Jhalakathi",
+  "Khagrachhari": "Khagrachari",
+  "Maulvibazar": "Moulvibazar",
+  "Nawabganj": "Chapai Nawabganj",
+  "Netrakona": "Netrokona",
+  "Brahamanbaria": "Brahmanbaria"
+};
+
+// Get the correct name for data.js lookup
+function getDataName(geojsonName) {
+  return districtNameMap[geojsonName] || geojsonName;
+}
+
 // Load and render the map
 async function initMap() {
   try {
@@ -134,8 +152,9 @@ function renderMap() {
 // Show tooltip
 function showTooltip(event, name) {
   const tooltip = document.getElementById('tooltip');
-  const district = genocideData.districts.find(d => d.name === name);
-  const displayName = currentLang === 'bn' && district ? district.nameBn : name;
+  const dataName = getDataName(name);
+  const district = genocideData.districts.find(d => d.name === dataName);
+  const displayName = currentLang === 'bn' && district ? district.nameBn : dataName;
 
   tooltip.textContent = displayName;
   tooltip.style.left = (event.pageX + 10) + 'px';
@@ -159,8 +178,9 @@ function selectDistrict(name, division) {
 
   selectedDistrictName = name;
 
-  // Find district data
-  const district = genocideData.districts.find(d => d.name === name);
+  // Find district data using mapped name
+  const dataName = getDataName(name);
+  const district = genocideData.districts.find(d => d.name === dataName);
 
   if (district) {
     showDistrictInfo(district);
@@ -222,14 +242,16 @@ function showDistrictInfo(district) {
 function showPlaceholderInfo(name, division) {
   const infoDefault = document.getElementById('infoDefault');
   const infoContent = document.getElementById('infoContent');
-  const districtName = document.getElementById('districtName');
+  const districtNameEl = document.getElementById('districtName');
   const siteCount = document.getElementById('siteCount');
   const sitesList = document.getElementById('sitesList');
 
   infoDefault.style.display = 'none';
   infoContent.style.display = 'block';
 
-  districtName.textContent = name;
+  // Use mapped name for display
+  const dataName = getDataName(name);
+  districtNameEl.textContent = dataName;
   siteCount.textContent = division + ' Division';
   sitesList.innerHTML = `<p class="placeholder-text">${currentLang === 'bn'
       ? 'এই জেলার তথ্য শীঘ্রই যুক্ত হবে...'
